@@ -34,3 +34,17 @@ class Admin(db.Model):
     admin_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+class Today_Services(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customer_name=db.Column(db.String(256),nullable=False)
+    contact_no=db.Column(db.Integer,nullable=False,unique=True)
+    location=db.Column(db.String,nullable=True)
+
+class Closed_Services(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customer_name=db.Column(db.String(256),nullable=False)
+    contact_no=db.Column(db.Integer,nullable=False,unique=True)
+    location=db.Column(db.String,nullable=False)
+    date=db.Column(db.Date,nullable=False)
+    rating=db.Column(db.Integer)

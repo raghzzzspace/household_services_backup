@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
+from model import Today_Services, Closed_Services
 import secrets
 from flask_migrate import Migrate
 
@@ -18,8 +19,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -161,7 +162,12 @@ def service_prof_signup():
 
 @app.route('/user/professional_dashboard', methods=['GET'])
 def professional_dashboard():
-    return render_template('user/professional_dashboard.html')
+    # Query the database for today and closed services
+    today_services = Today_Services.query.all()  # Get all records from Today_Services
+    closed_services = Closed_Services.query.all()  # Get all records from Closed_Services
+
+    # Render the template with dynamic data
+    return render_template('user/professional_dashboard.html', today_services=today_services, closed_services=closed_services)
 
 @app.route('/user/professional_search', methods=['GET'])
 def professional_search():
@@ -196,4 +202,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=7000)
+    app.run(debug=True, host='0.0.0.0', port=8000)

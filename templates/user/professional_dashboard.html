@@ -33,26 +33,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>John Doe</td>
-                        <td>123-456-7890</td>
-                        <td>Downtown, 12345</td>
-                        <td>
-                            <button class="btn btn-outline-primary btn-sm">Accept</button>
-                            <button class="btn btn-outline-danger btn-sm">Reject</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Jane Smith</td>
-                        <td>098-765-4321</td>
-                        <td>Uptown, 54321</td>
-                        <td>
-                            <button class="btn btn-outline-primary btn-sm">Accept</button>
-                            <button class="btn btn-outline-danger btn-sm">Reject</button>
-                        </td>
-                    </tr>
+                    {% for service in today_services %}
+                        <tr>
+                            <td>{{ service.id }}</td>
+                            <td>{{ service.customer_name }}</td>
+                            <td>{{ service.contact_no }}</td>
+                            <td>{{ service.location }}</td>
+                            <td>
+                                <button class="btn btn-outline-primary btn-sm">Accept</button>
+                                <button class="btn btn-outline-danger btn-sm">Reject</button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No services available today.</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -72,22 +68,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Alice Brown</td>
-                        <td>555-123-4567</td>
-                        <td>Green Valley, 67890</td>
-                        <td>2024-11-01</td>
-                        <td>⭐⭐⭐⭐</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Bob White</td>
-                        <td>555-987-6543</td>
-                        <td>Blue Ridge, 78901</td>
-                        <td>2024-11-02</td>
-                        <td>⭐⭐⭐⭐⭐</td>
-                    </tr>
+                    {% for service in closed_services %}
+                        <tr>
+                            <td>{{ service.id }}</td>
+                            <td>{{ service.customer_name }}</td>
+                            <td>{{ service.contact_no }}</td>
+                            <td>{{ service.location }}</td>
+                            <td>{{ service.date }}</td>
+                            <td>
+                                {% if service.rating %}
+                                    {{ '⭐' * service.rating }}
+                                {% else %}
+                                    No rating
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No closed services available.</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
