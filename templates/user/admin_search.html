@@ -1,0 +1,69 @@
+{% extends "user/admin_layout.html" %}
+
+{% block content %}
+    <div class="container-fluid mb-5">
+        <!-- Search Section -->
+        <h3 class="text-center mb-4" style="color: #004aad;">Search</h3>
+
+        <!-- Search Form -->
+        <form action="#" method="POST">
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="searchBy" class="form-label" style="color: #004aad;">Search By:</label>
+                        <select class="form-select" id="searchBy" name="searchBy" aria-label="Search By">
+                            <option value="service">Services</option>
+                            <option claue="servicerequests">Service Requests</option>
+                            <option value="customer">Customers</option>
+                            <option value="professional">Professionals</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="searchText" class="form-label" style="color: #004aad;">Search Text:</label>
+                        <input type="text" class="form-control" id="searchText" name="searchText" placeholder="Enter search text (e.g., closed)">
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-center">
+                    <button type="submit" class="btn" style="background-color: #004aad; color: white; border: none; height: 40px;margin-top:15px;">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Search Results Section -->
+        <h3 class="text-center mb-3" style="color: #004aad;">Search Results</h3>
+        <table class="table table-striped table-hover shadow rounded">
+            <thead style="background-color: #d9eaf7; color: #084298;">
+                <tr>
+                    <th>ID</th>
+                    <th>Assigned Professional (if any)</th>
+                    <th>Requested Date</th>
+                    <th>Status (R/A/C)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Example row with service request data -->
+                <tr>
+                    <td><a href="#" style="color: #004aad;">1</a></td> <!-- Clickable ID for details -->
+                    <td>John Doe</td>
+                    <td>2024-11-01</td>
+                    <td>R</td> <!-- Status: Requested -->
+                </tr>
+                <tr>
+                    <td><a href="#" style="color: #004aad;">2</a></td> <!-- Clickable ID for details -->
+                    <td>Jane Smith</td>
+                    <td>2024-11-02</td>
+                    <td>A</td> <!-- Status: Accepted -->
+                </tr>
+                <tr>
+                    <td><a href="#" style="color: #004aad;">3</a></td> <!-- Clickable ID for details -->
+                    <td>Michael Lee</td>
+                    <td>2024-11-03</td>
+                    <td>C</td> <!-- Status: Closed -->
+                </tr>
+                <!-- More rows will be added dynamically here based on the search -->
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

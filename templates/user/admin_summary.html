@@ -1,0 +1,101 @@
+{% extends "user/admin_layout.html" %}
+
+{% block content %}
+    <div class="container-fluid mb-5">
+        <div class="row">
+            <!-- Left Column: Overall Customer Ratings -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: #004aad;">Overall Customer Ratings</h5>
+                        <div class="d-flex justify-content-center">
+                            <canvas id="customerRatingsChart" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Service Requests Summary -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: #004aad;">Service Requests Summary</h5>
+                        <div class="d-flex justify-content-center">
+                            <canvas id="serviceRequestsSummaryChart" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js and Custom Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Circle chart for Overall Customer Ratings
+        var ctxRatings = document.getElementById('customerRatingsChart').getContext('2d');
+        var customerRatingsChart = new Chart(ctxRatings, {
+            type: 'doughnut',
+            data: {
+                labels: ['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐', '⭐⭐', '⭐'],
+                datasets: [{
+                    data: [40, 30, 15, 10, 5], // Example data (you can adjust this)
+                    backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#e0a800', '#dc3545'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' reviews';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Bar chart for Service Requests Summary
+        var ctxServiceRequests = document.getElementById('serviceRequestsSummaryChart').getContext('2d');
+        var serviceRequestsSummaryChart = new Chart(ctxServiceRequests, {
+            type: 'bar',
+            data: {
+                labels: ['Received', 'Closed', 'Rejected'],
+                datasets: [{
+                    label: 'Service Requests Summary',
+                    data: [150, 100, 50], // Example data (you can adjust this)
+                    backgroundColor: ['#17a2b8', '#28a745', '#dc3545'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

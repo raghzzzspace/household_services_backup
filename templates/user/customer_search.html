@@ -1,0 +1,64 @@
+{% extends "user/customer_layout.html" %}
+
+{% block content %}
+<div class="container-fluid mb-5">
+
+    <!-- Search Section -->
+    <div class="row align-items-center mb-4">
+        <label for="searchBy" class="col-form-label me-2" style="font-weight: bold;">Search by:</label>
+        <div class="col-auto">
+            <select id="searchBy" class="form-select">
+                <option value="service_name">Service Name</option>
+                <option value="pin_code">Pin Code</option>
+                <option value="location">Location</option>
+                <!-- Add more options if needed -->
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="text" class="form-control" placeholder="Enter your search" id="searchInput">
+        </div>
+        <div class="col-auto">
+            <button type="button" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+
+    <!-- Search Results Section -->
+    <div class="mb-5">
+        <h3 class="mb-4" style="color: #004aad;">Best Salon Packages</h3>
+        <div class="list-group">
+
+            <!-- Sample Result 1 -->
+            <div class="list-group-item d-flex justify-content-between align-items-center shadow-sm p-3 mb-3 rounded">
+                <div>
+                    <h5>Classic Salon Package</h5>
+                    <p>Ratings: 4.5/5 &nbsp; | &nbsp; Base Price: $50</p>
+                    <p>Description: Includes haircut, facial, and manicure.</p>
+                </div>
+                <button type="button" class="btn btn-success">Book</button>
+            </div>
+
+            <!-- Sample Result 2 -->
+            <div class="list-group-item d-flex justify-content-between align-items-center shadow-sm p-3 mb-3 rounded">
+                <div>
+                    <h5>Deluxe Salon Package</h5>
+                    <p>Ratings: 4.7/5 &nbsp; | &nbsp; Base Price: $80</p>
+                    <p>Description: Includes haircut, spa, manicure, and pedicure.</p>
+                </div>
+                <button type="button" class="btn btn-success">Book</button>
+            </div>
+
+            <!-- Sample Result 3 -->
+            <div class="list-group-item d-flex justify-content-between align-items-center shadow-sm p-3 mb-3 rounded">
+                <div>
+                    <h5>Luxury Salon Package</h5>
+                    <p>Ratings: 4.9/5 &nbsp; | &nbsp; Base Price: $120</p>
+                    <p>Description: Includes haircut, facial, full body massage, and luxury manicure & pedicure.</p>
+                </div>
+                <button type="button" class="btn btn-success">Book</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

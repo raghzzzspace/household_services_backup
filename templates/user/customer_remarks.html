@@ -1,0 +1,94 @@
+{% extends "user/customer_layout.html" %}
+
+{% block content %}
+<div class="container-fluid mb-5" style="max-width: 600px; margin-top: 30px;">
+
+    <!-- Service Remarks Section -->
+    <div class="shadow p-4 rounded" style="border: 2px solid #ccc; background-color: #f9f9f9;">
+        <h4 class="text-center text-primary mb-3">Service Remarks</h4>
+        <p class="text-center text-primary">Request ID: xxx-xxx</p>
+
+        <!-- Service Details -->
+        <div class="row mb-3">
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="Service Name" disabled
+                    style="background-color: #f8d7da;">
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="Description" disabled
+                    style="background-color: #f8d7da;">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="Professional ID" disabled
+                    style="background-color: #f8d7da;">
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="Professional Name" disabled
+                    style="background-color: #f8d7da;">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="dd/mm/yyyy" disabled
+                    style="background-color: #f8d7da;">
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control text-center" placeholder="Contact No." disabled
+                    style="background-color: #f8d7da;">
+            </div>
+        </div>
+
+        <!-- Service Rating -->
+        <div class="mb-3">
+            <label class="form-label">Service rating:</label>
+            <div class="rating">
+                <span class="diamond">&#9670;</span>
+                <span class="diamond">&#9670;</span>
+                <span class="diamond">&#9670;</span>
+                <span class="diamond inactive">&#9670;</span>
+                <span class="diamond inactive">&#9670;</span>
+            </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="mb-4">
+            <label class="form-label">Remarks (if any):</label>
+            <textarea class="form-control" rows="3" placeholder="Enter your remarks here..."
+                style="resize: none;"></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-primary btn-sm">Submit</button>
+            <button type="button" class="btn btn-secondary btn-sm">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating .diamond {
+        font-size: 1.5em;
+        color: #ff6666;
+        cursor: pointer;
+    }
+
+    .rating .diamond.inactive {
+        color: #ccc;
+    }
+</style>
+
+<script>
+    // JavaScript to handle rating interaction
+    document.querySelectorAll('.diamond').forEach((diamond, index) => {
+        diamond.addEventListener('click', () => {
+            document.querySelectorAll('.diamond').forEach((d, i) => {
+                d.classList.toggle('inactive', i > index);
+            });
+        });
+    });
+</script>
+{% endblock %}
