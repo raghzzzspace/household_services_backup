@@ -1,15 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
 from model import Today_Services, Closed_Services
 import secrets
 from flask_migrate import Migrate
+import sqlite3
 
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:/Users/hp/Desktop/household_services_database.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:/Users/Ishita Tayal/Desktop/household_services.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,8 +35,9 @@ def user_login():
         password = request.form['password']
 
         # Check if the user is a Customer
-        customer = Customer.query.filter_by(email=email, password=password).first()
+        customer =  Customer.query.filter_by(email=email, password=password).first()
         if customer:
+            session['customer_id'] = customer.customer_id
             flash(f'Welcome back, {customer.full_name}!', 'success')
             return redirect(url_for('cust_dashboard'))  # Redirect to Customer Dashboard
 
@@ -60,6 +63,24 @@ def user_login():
 @app.route('/user/customer_dashboard', methods=['GET'])
 def cust_dashboard():
     return render_template('user/customer_dashboard.html')
+
+@app.route('/user/customer_profile', methods=['GET'])
+def cust_profile():
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    customer = Customer.query.filter_by(customer_id=customer_id).one()
+    return render_template('user/customer_profile.html', customer=customer)
+
+@app.route('/user/customer_remarks', methods=['GET'])
+def cust_remarks():
+    return render_template('user/customer_remarks.html')
+
+@app.route('/user/customer_search', methods=['GET'])
+def cust_search():
+    return render_template('user/customer_search.html')
+
+@app.route('/user/customer_summary', methods=['GET'])
+def cust_summary():
+    return render_template('user/customer_summary.html')
 
 @app.route('/professional/login', methods=['GET'])
 def service_professional_login():
@@ -201,5 +222,9 @@ def logout():
 
 
 
+@app.route('/user/admin_profile', methods=['GET'])
+def admin_profile():
+    return render_template('/user/admin_profile.html')
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(debug=True, host='0.0.0.0', port=7000)
