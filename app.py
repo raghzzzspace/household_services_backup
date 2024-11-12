@@ -1,9 +1,10 @@
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
 import secrets
 from flask_migrate import Migrate
+import sqlite3
 
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
@@ -32,9 +33,15 @@ def user_login():
         email = request.form['email']
         password = request.form['password']
 
+        connection = sqlite3.connect('C:/Users/Ishita Tayal/Desktop/household_services.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT customer_id FROM customer WHERE email = ? AND password = ?", (email, password))
+        customerq = cursor.fetchone()
+
         # Check if the user is a Customer
         customer = Customer.query.filter_by(email=email, password=password).first()
         if customer:
+            session['customer_id'] = customerq[0]
             flash(f'Welcome back, {customer.full_name}!', 'success')
             return redirect(url_for('cust_dashboard'))  # Redirect to Customer Dashboard
 
@@ -63,7 +70,22 @@ def cust_dashboard():
 
 @app.route('/user/customer_profile', methods=['GET'])
 def cust_profile():
-    return render_template('user/customer_profile.html')
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    connection = sqlite3.connect('C:/Users/Ishita Tayal/Desktop/household_services.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT email, full_name, address, pincode FROM customer WHERE customer_id = ?", (customer_id,))
+    customer_data = cursor.fetchone()
+
+    if not customer_data:
+        return "Customer not found", 404
+
+    customer = {
+        "email": customer_data[0],
+        "fullname": customer_data[1],
+        "address": customer_data[2],
+        "pincode": customer_data[3]
+    }
+    return render_template('user/customer_profile.html', customer=customer)
 
 @app.route('/user/customer_remarks', methods=['GET'])
 def cust_remarks():
