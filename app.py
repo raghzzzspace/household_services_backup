@@ -7,6 +7,7 @@ import secrets
 from flask_migrate import Migrate
 import sqlite3
 from sqlalchemy.sql import text
+from datetime import datetime
 
 
 
@@ -25,8 +26,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -79,8 +80,28 @@ def customer_profile():
 
 @app.route('/user/customer_remarks', methods=['GET'])
 def customer_remarks():
-
     return render_template('user/customer_remarks.html')
+
+@app.route('/user/submit_service_remarks', methods=['POST'])
+def submit_service_remarks():
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    customer = Customer.query.filter_by(customer_id=customer_id).one()
+    service_id = request.form.get('service_id')
+    professional = Professional.query.join(Service_History, Professional.full_name == Service_History.professional_name).filter(Service_History.service_id == service_id).filter(Professional.full_name == Service_History.professional_name).one()
+    date_string = datetime.today().strftime('%Y-%m-%d')
+    # Create a new booking instance
+    closed_booking = Closed_Services(
+        customer_name=customer.full_name,
+        email=customer.email,
+        location=customer.address,
+        date=datetime.strptime(date_string, "%Y-%m-%d").date(),
+        cid=customer.customer_id,
+        pid=professional.professional_id,
+        rating = request.form.get('rating')
+    )
+    db.session.add(closed_booking)
+    db.session.commit()
+    return redirect(url_for('customer_dashboard'))
 
 @app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
 def professional_view_profile(professional_id):
@@ -210,7 +231,11 @@ def close_service():
         service.status = "Closed"
         db.session.commit()
 
-    flash('Booking successful!', 'success')
+    professional = Professional.query.join(Service_History, Professional.full_name == Service_History.professional_name).filter(Service_History.service_id == service_id).filter(Professional.full_name == Service_History.professional_name).one()
+    customer_id = session['customer_id']
+    
+    db.session.query(Today_Services).filter_by(professional_id = professional.professional_id, customer_id = customer_id ).delete()
+    db.session.commit()
 
     # Redirect back to the main page or to a confirmation page
     return render_template('user/customer_remarks.html', service = service)
@@ -615,4 +640,4 @@ def search_services():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=7000)
+    app.run(debug=True, host='0.0.0.0', port=8000)

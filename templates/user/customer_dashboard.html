@@ -101,7 +101,7 @@
                         <td>{{ service.service_name }}</td>
                         <td>{{ service.professional_name }}</td>
                         <td>{{ service.email }}</td>
-                        {% if search_by == 'Closed' %}
+                        {% if service.status == 'Closed' %}
                         <td>Closed</td>
                         {% else %}
                         <td>
