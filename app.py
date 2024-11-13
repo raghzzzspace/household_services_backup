@@ -177,13 +177,13 @@ def customer_search():
         # Handling different search criteria and querying the appropriate table
         if search_by == 'service_name':
             # Search in the 'services' table for service_name
-            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         elif search_by == 'pin_code':
             # Search in the 'professional' table for pincode
-            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         elif search_by == 'location':
             # Search in the 'professional' table for location
-            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         else:
             flash('Invalid search criteria.', 'danger')
 
@@ -626,7 +626,7 @@ def search_services():
     if request.method == 'POST':  # Handle POST request
         search_by = request.form.get('service_type')
         # Search in the 'services' table for service_name
-        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%")).all()
+        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%"),Professional.status == "Approved").all()
 
 
     return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
