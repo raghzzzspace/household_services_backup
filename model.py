@@ -28,7 +28,7 @@ class Professional(db.Model):
     address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(10), nullable=False)
     role = db.Column(Enum('professional', name='role'), default='professional')
-    status = db.Column(db.String(10), default='pending')  # Status of the professional
+    status = db.Column(db.String(10), nullable=True)  # Status of the professional
 
 # Define the Admin model
 class Admin(db.Model):

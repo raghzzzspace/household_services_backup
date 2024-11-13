@@ -8,6 +8,12 @@ from flask_migrate import Migrate
 import sqlite3
 from sqlalchemy.sql import text
 
+from sqlalchemy import create_engine
+
+# Add the 'timeout' argument to the SQLite connection string
+engine = create_engine('sqlite:///your_database.db', connect_args={'timeout': 30})
+
+
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
