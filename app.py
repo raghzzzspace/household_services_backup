@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req
+from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req, Service_History
 import secrets
 from flask_migrate import Migrate
 import sqlite3
@@ -70,7 +70,9 @@ def user_login():
 
 @app.route('/user/customer_dashboard', methods=['GET'])
 def customer_dashboard():
-    return render_template('user/customer_dashboard.html')
+    customer_id = session['customer_id']
+    service_history = Service_History.query.filter_by(id=customer_id).all()
+    return render_template('user/customer_dashboard.html', service_history=service_history)
 
 @app.route('/user/customer_profile', methods=['GET'])
 def customer_profile():
@@ -176,14 +178,24 @@ def book_service():
 
     # Create a new booking instance
     new_booking = Today_Services(
-        id=customer.customer_id,
         customer_name=customer.full_name,
         email=customer.email,
         location=customer.address
     )
+    
 
+    new_booking_cust = Service_History(
+        id= customer.customer_id,
+        service_name = request.form.get('service_name'),
+        professional_name=request.form.get('professional_name'),
+        email=request.form.get('email'),
+        status = "Requested"
+    )
+
+    
     # Add to the session and commit to the database
     db.session.add(new_booking)
+    db.session.add(new_booking_cust)
     db.session.commit()
 
     flash('Booking successful!', 'success')

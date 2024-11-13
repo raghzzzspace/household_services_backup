@@ -57,10 +57,10 @@
                     <td>{{ result.pincode }}</td>
                     <td>
                         <form action="{{ url_for('book_service') }}" method="POST">
-                            <input type="hidden" name="id" value="{{ result.id }}">
-                            <input type="hidden" name="customer_name" value="{{ customer_name }}">
-                            <input type="hidden" name="email" value="{{ customer_email }}">
-                            <input type="hidden" name="location" value="{{ result.location }}">
+                            <input type="hidden" name="id" value="{{ result.professional_id }}">
+                            <input type="hidden" name="service_name" value="{{ result.service_name }}">
+                            <input type="hidden" name="professional_name" value="{{ result.full_name }}">
+                            <input type="hidden" name="email" value="{{ result.email }}">
                             <button type="submit" class="btn btn-success">Book</button>
                         </form>
                     </td>

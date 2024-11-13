@@ -46,7 +46,7 @@ class Services(db.Model):
 class Service_Req(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     service_name=db.Column(db.String(256),nullable=False)
-    assign_prof=db.Column(db.Integer,unique=True)
+    assign_prof=db.Column(db.Integer)
     req_date=db.Column(db.Date,nullable=False)
 
 # Define the Today_services model
@@ -60,29 +60,30 @@ class Today_services:
 class Closed_services:
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.Integer,nullable=False)
     date=db.Column(db.Date,nullable=False)
     rating=db.Column(db.Integer)
 
 # Define the Service_History model
-class Service_History:
-    id=db.Column(db.Integer, primary_key=True)
+class Service_History(db.Model):
+    id=db.Column(db.Integer)
+    service_id=db.Column(db.Integer, primary_key=True)
     service_name=db.Column(db.String(256),nullable=False)
     professional_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False)
     status=db.Column(db.String(16),nullable=False)    
 
 class Today_Services(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.String,nullable=True)
 
 class Closed_Services(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.String,nullable=False)
     date=db.Column(db.Date,nullable=False)
     rating=db.Column(db.Integer)
@@ -90,7 +91,7 @@ class Closed_Services(db.Model):
 class Services_status(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.String,nullable=True)
     status=db.Column(db.String(16),nullable=False)
 
