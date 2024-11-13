@@ -51,6 +51,7 @@ def user_login():
         # Check if the user is a Professional
         professional = Professional.query.filter_by(email=email, password=password).first()
         if professional:
+            session['professional_id'] = professional.professional_id
             flash(f'Welcome back, {professional.full_name}!', 'success')
             return redirect(url_for('professional_dashboard'))  # Redirect to Professional Dashboard
 
@@ -80,6 +81,64 @@ def cust_profile():
 @app.route('/user/customer_remarks', methods=['GET'])
 def cust_remarks():
     return render_template('user/customer_remarks.html')
+
+@app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
+def professional_view_profile(professional_id):
+    # Fetch the professional by the ID passed in the URL
+    professional = Professional.query.get_or_404(professional_id)
+
+    return render_template('user/professional_view_profile.html', professional=professional)
+
+
+@app.route('/user/professional_edit_profile/<int:professional_id>', methods=['GET', 'POST'])
+def professional_edit_profile(professional_id):
+    professional = Professional.query.get_or_404(professional_id)
+
+    if request.method == 'POST':
+        # Get form data, but exclude role and status from modification
+        email = request.form.get('email', professional.email)  # Default to current email
+        password = request.form.get('password')  # Use .get() to avoid KeyError
+        fullname = request.form.get('fullname')
+        service_name = request.form.get('service_name')
+        experience = request.form.get('experience')
+        document = request.files.get('document')  # Handle file upload
+        address = request.form.get('address')
+        pincode = request.form.get('pincode')
+
+        # Ensure that required fields are provided
+        if not fullname or not service_name or not experience or not address or not pincode:
+            flash('Please fill in all required fields.', 'danger')
+            return render_template('user/professional_edit_profile.html', professional=professional)
+
+        # If the password field is not empty, hash and update it
+        if password:
+            # You should hash the password before saving it (e.g., using bcrypt or werkzeug.security)
+            professional.password = password  # Update the password (after hashing)
+
+        # Update other details but exclude role and status from the update
+        professional.email = email  # Email is either updated or remains unchanged
+        professional.full_name = fullname
+        professional.service_name = service_name
+        professional.experience = int(experience) if experience else 0  # Ensure experience is an integer
+        if document:
+            professional.document = document.read()  # Save document (e.g., file upload)
+        professional.address = address
+        professional.pincode = pincode
+
+        # Role and status are not updated, they remain unchanged
+
+        # Commit changes to the database
+        try:
+            db.session.commit()
+            flash('Your profile has been updated successfully!', 'success')
+            return redirect(url_for('professional_view_profile', professional_id=professional.professional_id))
+        except Exception as e:
+            db.session.rollback()  # Rollback the session in case of error
+            flash(f"Error: {e}", 'danger')
+            return render_template('user/professional_edit_profile.html', professional=professional)
+
+    return render_template('user/professional_edit_profile.html', professional=professional)
+
 
 @app.route('/user/customer_search', methods=['GET'])
 def cust_search():
@@ -187,15 +246,23 @@ def service_prof_signup():
 
     return render_template('user/service_prof_signup.html')
 
+def get_logged_in_professional():
+    # Check if the professional is logged in
+    professional_id = session.get('professional_id')
+    if professional_id:
+        return Professional.query.get(professional_id)  # Fetch the professional object from the database
+    return None  # If no professional is logged in, return None
+
 
 @app.route('/user/professional_dashboard', methods=['GET'])
 def professional_dashboard():
+    professional = get_logged_in_professional()
     # Query the database for today and closed services
     today_services = Today_Services.query.all()  # Get all records from Today_Services
     closed_services = Closed_Services.query.all()  # Get all records from Closed_Services
 
     # Render the template with dynamic data
-    return render_template('user/professional_dashboard.html', today_services=today_services, closed_services=closed_services)
+    return render_template('user/professional_dashboard.html',professional=professional, today_services=today_services, closed_services=closed_services)
 
 @app.route('/accept_service/<int:service_id>', methods=['POST'])
 def accept_service(service_id):
