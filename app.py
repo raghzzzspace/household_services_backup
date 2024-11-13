@@ -2,16 +2,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Today_Services, Closed_Services
+from model import Today_Services, Closed_Services, Services_status
 import secrets
 from flask_migrate import Migrate
 import sqlite3
+from sqlalchemy.sql import text
 
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:/Users/Ishita Tayal/Desktop/household_services.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -21,8 +22,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 @app.route("/")
 def index():
@@ -190,13 +191,92 @@ def professional_dashboard():
     # Render the template with dynamic data
     return render_template('user/professional_dashboard.html', today_services=today_services, closed_services=closed_services)
 
-@app.route('/user/professional_search', methods=['GET'])
+@app.route('/accept_service/<int:service_id>', methods=['POST'])
+def accept_service(service_id):
+    # Get the service from Today_Services
+    service = Today_Services.query.get(service_id)
+    if service:
+        # Add the service to Services_status with status 'A'
+        new_service = Services_status(
+            customer_name=service.customer_name,
+            contact_no=service.contact_no,
+            location=service.location,
+            status='A'
+        )
+        db.session.add(new_service)
+        db.session.delete(service)  # Remove from Today_Services
+        db.session.commit()
+    return redirect(url_for('professional_dashboard'))
+
+@app.route('/reject_service/<int:service_id>', methods=['POST'])
+def reject_service(service_id):
+    # Get the service from Today_Services
+    service = Today_Services.query.get(service_id)
+    if service:
+        # Add the service to Services_status with status 'R'
+        new_service = Services_status(
+            customer_name=service.customer_name,
+            contact_no=service.contact_no,
+            location=service.location,
+            status='R'
+        )
+        db.session.add(new_service)
+        db.session.delete(service)  # Remove from Today_Services
+        db.session.commit()
+    return redirect(url_for('professional_dashboard'))
+
+@app.route('/user/professional_search', methods=['GET', 'POST'])
 def professional_search():
-    return render_template('user/professional_search.html')
+    search_results = []
+
+    if request.method == 'POST':
+        search_by = request.form.get('searchBy')
+        search_text = request.form.get('searchText')
+
+        if not search_text:
+            flash('Please enter search text.', 'warning')
+            return redirect(url_for('professional_search'))
+
+        # Handling different search criteria
+        if search_by == 'date':
+            search_results = Closed_Services.query.filter(Closed_Services.date == search_text).all()
+        elif search_by == 'location':
+            search_results = Closed_Services.query.filter(Closed_Services.location.ilike(f"%{search_text}%")).all()
+        elif search_by == 'pincode':
+            search_results = Closed_Services.query.filter(Closed_Services.location.contains(search_text)).all()
+        elif search_by == 'customer':
+            search_results = Closed_Services.query.filter(Closed_Services.customer_name.ilike(f"%{search_text}%")).all()
+        else:
+            flash('Invalid search criteria.', 'danger')
+
+    return render_template('user/professional_search.html', search_results=search_results)
+
+
+
 
 @app.route('/user/professional_summary', methods=['GET'])
 def professional_summary():
-    return render_template('user/professional_summary.html')
+    # Query for ratings data
+    ratings_query = text("SELECT rating, COUNT(*) FROM closed__services GROUP BY rating")
+    ratings_result = db.session.execute(ratings_query).fetchall()
+
+    # Process ratings result into a format for Chart.js
+    ratings_data = {str(row[0]): row[1] for row in ratings_result}
+
+    # Query for service requests data
+    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
+    requests_result = db.session.execute(requests_query).fetchall()
+
+    # Process service requests result
+    service_requests_data = {
+        'Received': sum(row[1] for row in requests_result),
+        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
+        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+    }
+
+    return render_template('user/professional_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
+
+
 
 @app.route('/user/admin_dashboard', methods=['GET'])
 def admin_dashboard():

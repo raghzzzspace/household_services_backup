@@ -32,6 +32,19 @@
     <!-- Chart.js and Custom Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Pass dynamic data from the backend using template variables
+        var ratingsData = {{ ratings_data | tojson | safe }};
+        var serviceRequestsData = {{ service_requests_data | tojson | safe }};
+
+        // Prepare ratings chart data
+        var ratingsChartData = [
+            ratingsData['5'] || 0,
+            ratingsData['4'] || 0,
+            ratingsData['3'] || 0,
+            ratingsData['2'] || 0,
+            ratingsData['1'] || 0
+        ];
+
         // Circle chart for Reviews / Ratings
         var ctxRatings = document.getElementById('ratingsChart').getContext('2d');
         var ratingsChart = new Chart(ctxRatings, {
@@ -39,7 +52,7 @@
             data: {
                 labels: ['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐', '⭐⭐', '⭐'],
                 datasets: [{
-                    data: [50, 30, 10, 5, 5], // Example data (you can adjust this)
+                    data: ratingsChartData,
                     backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#e0a800', '#dc3545'],
                     borderColor: '#ffffff',
                     borderWidth: 2
@@ -70,7 +83,11 @@
                 labels: ['Received', 'Closed', 'Rejected'],
                 datasets: [{
                     label: 'Service Requests',
-                    data: [120, 80, 40], // Example data (you can adjust this)
+                    data: [
+                        serviceRequestsData['Received'] || 0,
+                        serviceRequestsData['Closed'] || 0,
+                        serviceRequestsData['Rejected'] || 0
+                    ],
                     backgroundColor: ['#17a2b8', '#28a745', '#dc3545'],
                     borderColor: '#ffffff',
                     borderWidth: 2

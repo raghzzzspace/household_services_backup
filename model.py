@@ -85,3 +85,10 @@ class Closed_Services(db.Model):
     location=db.Column(db.String,nullable=False)
     date=db.Column(db.Date,nullable=False)
     rating=db.Column(db.Integer)
+
+class Services_status(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customer_name=db.Column(db.String(256),nullable=False)
+    contact_no=db.Column(db.Integer,nullable=False,unique=True)
+    location=db.Column(db.String,nullable=True)
+    status=db.Column(db.String(16),nullable=False)

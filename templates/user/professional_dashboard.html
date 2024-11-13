@@ -40,9 +40,14 @@
                             <td>{{ service.contact_no }}</td>
                             <td>{{ service.location }}</td>
                             <td>
-                                <button class="btn btn-outline-primary btn-sm">Accept</button>
-                                <button class="btn btn-outline-danger btn-sm">Reject</button>
+                                <form action="{{ url_for('accept_service', service_id=service.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Accept</button>
+                                </form>
+                                <form action="{{ url_for('reject_service', service_id=service.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                </form>
                             </td>
+                            
                         </tr>
                     {% else %}
                         <tr>
