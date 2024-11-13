@@ -156,7 +156,7 @@ def customer_search():
         # Handling different search criteria and querying the appropriate table
         if search_by == 'service_name':
             # Search in the 'services' table for service_name
-            search_results = Services.query.filter(Services.service_name.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%")).all()
         elif search_by == 'pin_code':
             # Search in the 'professional' table for pincode
             search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%")).all()
@@ -167,6 +167,29 @@ def customer_search():
             flash('Invalid search criteria.', 'danger')
 
     return render_template('user/customer_search.html', search_results=search_results, search_by=search_by)
+
+@app.route('/book_service', methods=['POST'])
+def book_service():
+    # Retrieve form data
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    customer = Customer.query.filter_by(customer_id=customer_id).one()
+
+    # Create a new booking instance
+    new_booking = Today_Services(
+        id=customer.customer_id,
+        customer_name=customer.full_name,
+        email=customer.email,
+        location=customer.address
+    )
+
+    # Add to the session and commit to the database
+    db.session.add(new_booking)
+    db.session.commit()
+
+    flash('Booking successful!', 'success')
+
+    # Redirect back to the main page or to a confirmation page
+    return redirect(url_for('customer_dashboard'))
 
 @app.route('/user/customer_summary', methods=['GET'])
 def customer_summary():
