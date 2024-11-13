@@ -101,7 +101,16 @@
                         <td>{{ service.service_name }}</td>
                         <td>{{ service.professional_name }}</td>
                         <td>{{ service.email }}</td>
-                        <td>{{ service.status }}</td>
+                        {% if search_by == 'Closed' %}
+                        <td>Closed</td>
+                        {% else %}
+                        <td>
+                            <form method="POST" action="{{ url_for('close_service') }}">
+                                <input type="hidden" name="service_id" value="{{ service.service_id }}">
+                                <button type="submit" class="btn btn-danger">Close</button>
+                            </form>
+                        </td>
+                        {% endif %}
                     </tr>
                     {% else %}
                     <tr>

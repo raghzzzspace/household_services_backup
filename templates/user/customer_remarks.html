@@ -6,40 +6,17 @@
     <!-- Service Remarks Section -->
     <div class="shadow p-4 rounded" style="border: 2px solid #ccc; background-color: #f9f9f9;">
         <h4 class="text-center text-primary mb-3">Service Remarks</h4>
-        <p class="text-center text-primary">Request ID: xxx-xxx</p>
+        <p class="text-center text-primary">Service ID: {{ service.service_id }}</p>
 
         <!-- Service Details -->
         <div class="row mb-3">
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="Service Name" disabled
-                    style="background-color: #f8d7da;">
-            </div>
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="Description" disabled
-                    style="background-color: #f8d7da;">
-            </div>
+            <input type="text" class="form-control text-center" placeholder="{{ service.service_name }}" disabled
+                style="background-color: #f8d7da;">
         </div>
 
         <div class="row mb-3">
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="Professional ID" disabled
-                    style="background-color: #f8d7da;">
-            </div>
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="Professional Name" disabled
-                    style="background-color: #f8d7da;">
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="dd/mm/yyyy" disabled
-                    style="background-color: #f8d7da;">
-            </div>
-            <div class="col-6">
-                <input type="text" class="form-control text-center" placeholder="Contact No." disabled
-                    style="background-color: #f8d7da;">
-            </div>
+            <input type="text" class="form-control text-center" placeholder="{{ service.professional_name }}" disabled
+                style="background-color: #f8d7da;">
         </div>
 
         <!-- Service Rating -->

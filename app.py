@@ -82,6 +82,7 @@ def customer_profile():
 
 @app.route('/user/customer_remarks', methods=['GET'])
 def customer_remarks():
+
     return render_template('user/customer_remarks.html')
 
 @app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
@@ -183,7 +184,6 @@ def book_service():
         location=customer.address
     )
     
-
     new_booking_cust = Service_History(
         id= customer.customer_id,
         service_name = request.form.get('service_name'),
@@ -192,7 +192,6 @@ def book_service():
         status = "Requested"
     )
 
-    
     # Add to the session and commit to the database
     db.session.add(new_booking)
     db.session.add(new_booking_cust)
@@ -202,6 +201,20 @@ def book_service():
 
     # Redirect back to the main page or to a confirmation page
     return redirect(url_for('customer_dashboard'))
+
+@app.route('/close_service', methods=['POST'])
+def close_service():
+    # Retrieve form data
+    service_id = request.form.get('service_id')
+    service = Service_History.query.filter_by(service_id = service_id).one()
+    if service:
+        service.status = "Closed"
+        db.session.commit()
+
+    flash('Booking successful!', 'success')
+
+    # Redirect back to the main page or to a confirmation page
+    return render_template('user/customer_remarks.html', service = service)
 
 @app.route('/user/customer_summary', methods=['GET'])
 def customer_summary():
