@@ -15,32 +15,25 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Example row with service data -->
-                <tr>
-                    <td><a href="#" style="color: #004aad;">1</a></td> <!-- Clickable ID for details -->
-                    <td>Plumbing</td>
-                    <td>$50</td>
-                    <td>
-                        <a href="#" class="btn btn-outline-warning btn-sm">Edit</a>
-                        <a href="#" class="btn btn-outline-danger btn-sm">Delete</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="#" style="color: #004aad;">2</a></td> <!-- Clickable ID for details -->
-                    <td>Electrical</td>
-                    <td>$75</td>
-                    <td>
-                        <a href="#" class="btn btn-outline-warning btn-sm">Edit</a>
-                        <a href="#" class="btn btn-outline-danger btn-sm">Delete</a>
-                    </td>
-                </tr>
-                <!-- More rows will be added dynamically here -->
+                {% for service in services %}
+                    <tr>
+                        <td><a href="#" style="color: #004aad;">{{ service.id }}</a></td>
+                        <td>{{ service.service_name }}</td>
+                        <td>${{ service.base_price }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_service', service_id=service.id) }}" class="btn btn-outline-warning btn-sm">Edit</a>
+                            <form method="POST" action="{{ url_for('delete_service', service_id=service.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
 
         <!-- Add New Service Button (Aligned to the right) -->
         <div class="text-end mb-5">
-            <a href="#" class="btn btn-primary btn-lg" style="width: 200px;">+ New Service</a>
+            <a href="/user/admin_add_service" class="btn btn-primary btn-lg" style="width: 200px;">+ New Service</a>
         </div>
 
         <!-- Professionals Section -->
@@ -56,30 +49,31 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Example row with professional data -->
-                <tr>
-                    <td><a href="#" style="color: #004aad;">1</a></td> <!-- Clickable ID for details -->
-                    <td>John Doe</td>
-                    <td>5</td>
-                    <td>Plumbing</td>
-                    <td>
-                        <a href="#" class="btn btn-outline-success btn-sm">Approve</a>
-                        <a href="#" class="btn btn-outline-danger btn-sm">Reject</a>
-                        <a href="#" class="btn btn-outline-warning btn-sm">Delete</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="#" style="color: #004aad;">2</a></td> <!-- Clickable ID for details -->
-                    <td>Jane Smith</td>
-                    <td>3</td>
-                    <td>Electrical</td>
-                    <td>
-                        <a href="#" class="btn btn-outline-success btn-sm">Approve</a>
-                        <a href="#" class="btn btn-outline-danger btn-sm">Reject</a>
-                        <a href="#" class="btn btn-outline-warning btn-sm">Delete</a>
-                    </td>
-                </tr>
-                <!-- More rows will be added dynamically here -->
+                {% for professional in professionals %}
+                    <tr>
+                        <td><a href="#" style="color: #004aad;">{{ professional.professional_id }}</a></td>
+                        <td>{{ professional.full_name }}</td>
+                        <td>{{ professional.experience }}</td>
+                        <td>{{ professional.service_name }}</td>
+                        <td>
+                            {% if professional.status %}
+                                <!-- Display status if available -->
+                                <span class="badge bg-secondary">{{ professional.status }}</span>
+                            {% else %}
+                                <!-- Show action buttons if no status -->
+                                <form method="POST" action="{{ url_for('approve_professional', professional_id=professional.professional_id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-success btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('reject_professional', professional_id=professional.professional_id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('delete_professional', professional_id=professional.professional_id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">Delete</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
 
@@ -95,28 +89,15 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Example row with service request data -->
-                <tr>
-                    <td><a href="#" style="color: #004aad;">1</a></td> <!-- Clickable ID for details -->
-                    <td>John Doe</td>
-                    <td>2024-11-01</td>
-                    <td>R</td> <!-- Status: Requested -->
-                </tr>
-                <tr>
-                    <td><a href="#" style="color: #004aad;">2</a></td> <!-- Clickable ID for details -->
-                    <td>Jane Smith</td>
-                    <td>2024-11-02</td>
-                    <td>A</td> <!-- Status: Accepted -->
-                </tr>
-                <tr>
-                    <td><a href="#" style="color: #004aad;">3</a></td> <!-- Clickable ID for details -->
-                    <td>Michael Lee</td>
-                    <td>2024-11-03</td>
-                    <td>C</td> <!-- Status: Closed -->
-                </tr>
-                <!-- More rows will be added dynamically here -->
+                {% for service_request in service_requests %}
+                    <tr>
+                        <td><a href="#" style="color: #004aad;">{{ service_request.id }}</a></td>
+                        <td>{{ service_request.assigned_prof or 'N/A' }}</td>
+                        <td>{{ service_request.req_date }}</td>
+                        <td>{{ service_request.status or 'N/A' }}</td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
-
 {% endblock %}

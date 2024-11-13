@@ -28,6 +28,7 @@ class Professional(db.Model):
     address = db.Column(db.Text, nullable=False)
     pincode = db.Column(db.String(10), nullable=False)
     role = db.Column(Enum('professional', name='role'), default='professional')
+    status = db.Column(db.String(10), default='pending')  # Status of the professional
 
 # Define the Admin model
 class Admin(db.Model):
@@ -67,7 +68,7 @@ class Closed_services:
 # Define the Service_History model
 class Service_History:
     id=db.Column(db.Integer, primary_key=True)
-    servuce_name=db.Column(db.String(256),nullable=False)
+    service_name=db.Column(db.String(256),nullable=False)
     professional_name=db.Column(db.String(256),nullable=False)
     contact_no=db.Column(db.Integer,nullable=False,unique=True)
     status=db.Column(db.String(16),nullable=False)    
@@ -92,3 +93,9 @@ class Services_status(db.Model):
     contact_no=db.Column(db.Integer,nullable=False,unique=True)
     location=db.Column(db.String,nullable=True)
     status=db.Column(db.String(16),nullable=False)
+
+class Admin_Search(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # Auto-incremented ID
+    assigned_professional = db.Column(db.String(255), nullable=False)  # Name or ID of the assigned professional
+    requested_date = db.Column(db.Date, nullable=False)  # Requested date
+    status = db.Column(db.String(16), nullable=False)  # Status of the service request

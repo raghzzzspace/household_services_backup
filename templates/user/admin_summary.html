@@ -3,25 +3,25 @@
 {% block content %}
     <div class="container-fluid mb-5">
         <div class="row">
-            <!-- Left Column: Overall Customer Ratings -->
+            <!-- Left Column: Reviews/Ratings -->
             <div class="col-md-6">
                 <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h5 class="card-title" style="color: #004aad;">Overall Customer Ratings</h5>
+                    <div class="card-body" style="min-height: 250px;"> <!-- Reduced height -->
+                        <h5 class="card-title" style="color: #004aad;">Reviews / Ratings</h5>
                         <div class="d-flex justify-content-center">
-                            <canvas id="customerRatingsChart" width="300" height="300"></canvas>
+                            <canvas id="ratingsChart" width="300" height="300"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Service Requests Summary -->
+            <!-- Right Column: Service Requests -->
             <div class="col-md-6">
                 <div class="card shadow-sm border-0">
-                    <div class="card-body">
-                        <h5 class="card-title" style="color: #004aad;">Service Requests Summary</h5>
+                    <div class="card-body" style="min-height: 250px;"> <!-- Reduced height -->
+                        <h5 class="card-title" style="color: #004aad;">Service Requests</h5>
                         <div class="d-flex justify-content-center">
-                            <canvas id="serviceRequestsSummaryChart" width="300" height="300"></canvas>
+                            <canvas id="serviceRequestsChart" width="300" height="300"></canvas>
                         </div>
                     </div>
                 </div>
@@ -32,14 +32,27 @@
     <!-- Chart.js and Custom Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Circle chart for Overall Customer Ratings
-        var ctxRatings = document.getElementById('customerRatingsChart').getContext('2d');
-        var customerRatingsChart = new Chart(ctxRatings, {
+        // Pass dynamic data from the backend using template variables
+        var ratingsData = {{ ratings_data | tojson | safe }};
+        var serviceRequestsData = {{ service_requests_data | tojson | safe }};
+
+        // Prepare ratings chart data
+        var ratingsChartData = [
+            ratingsData['5'] || 0,
+            ratingsData['4'] || 0,
+            ratingsData['3'] || 0,
+            ratingsData['2'] || 0,
+            ratingsData['1'] || 0
+        ];
+
+        // Circle chart for Reviews / Ratings
+        var ctxRatings = document.getElementById('ratingsChart').getContext('2d');
+        var ratingsChart = new Chart(ctxRatings, {
             type: 'doughnut',
             data: {
                 labels: ['⭐⭐⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐', '⭐⭐', '⭐'],
                 datasets: [{
-                    data: [40, 30, 15, 10, 5], // Example data (you can adjust this)
+                    data: ratingsChartData,
                     backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#e0a800', '#dc3545'],
                     borderColor: '#ffffff',
                     borderWidth: 2
@@ -54,7 +67,7 @@
                     tooltip: {
                         callbacks: {
                             label: function(tooltipItem) {
-                                return tooltipItem.label + ': ' + tooltipItem.raw + ' reviews';
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' responses';
                             }
                         }
                     }
@@ -62,15 +75,19 @@
             }
         });
 
-        // Bar chart for Service Requests Summary
-        var ctxServiceRequests = document.getElementById('serviceRequestsSummaryChart').getContext('2d');
-        var serviceRequestsSummaryChart = new Chart(ctxServiceRequests, {
+        // Bar chart for Service Requests
+        var ctxRequests = document.getElementById('serviceRequestsChart').getContext('2d');
+        var serviceRequestsChart = new Chart(ctxRequests, {
             type: 'bar',
             data: {
                 labels: ['Received', 'Closed', 'Rejected'],
                 datasets: [{
-                    label: 'Service Requests Summary',
-                    data: [150, 100, 50], // Example data (you can adjust this)
+                    label: 'Service Requests',
+                    data: [
+                        serviceRequestsData['Received'] || 0,
+                        serviceRequestsData['Closed'] || 0,
+                        serviceRequestsData['Rejected'] || 0
+                    ],
                     backgroundColor: ['#17a2b8', '#28a745', '#dc3545'],
                     borderColor: '#ffffff',
                     borderWidth: 2

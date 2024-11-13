@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Today_Services, Closed_Services, Services_status
+from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req
 import secrets
 from flask_migrate import Migrate
 import sqlite3
@@ -277,18 +277,135 @@ def professional_summary():
     return render_template('user/professional_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
 
 
-
+# Route to show the dashboard
 @app.route('/user/admin_dashboard', methods=['GET'])
 def admin_dashboard():
-    return render_template('user/admin_dashboard.html')
+    services = Services.query.all()
+    professionals = Professional.query.all()
+    service_requests = Service_Req.query.all()
+    return render_template('user/admin_dashboard.html', services=services, professionals=professionals, service_requests=service_requests)
 
-@app.route('/user/admin_search', methods=['GET'])
+# Route to edit a service
+@app.route('/user/edit_service/<int:service_id>', methods=['GET', 'POST'])
+def edit_service(service_id):
+    service = Services.query.get_or_404(service_id)
+    
+    if request.method == 'POST':
+        service.service_name = request.form['service_name']
+        service.base_price = request.form['base_price']
+        db.session.commit()
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('user/edit_service.html', service=service)
+
+# Route to delete a service
+@app.route('/user/delete_service/<int:service_id>', methods=['POST'])
+def delete_service(service_id):
+    service = Services.query.get_or_404(service_id)
+    db.session.delete(service)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+# Route to approve a professional
+@app.route('/user/approve_professional/<int:professional_id>', methods=['POST'])
+def approve_professional(professional_id):
+    professional = Professional.query.get_or_404(professional_id)
+    professional.status = 'Approved'  # Assuming you have a status field
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+# Route to reject a professional
+@app.route('/user/reject_professional/<int:professional_id>', methods=['POST'])
+def reject_professional(professional_id):
+    professional = Professional.query.get_or_404(professional_id)
+    professional.status = 'Rejected'  # Assuming you have a status field
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+# Route to delete a professional
+@app.route('/user/delete_professional/<int:professional_id>', methods=['POST'])
+def delete_professional(professional_id):
+    professional = Professional.query.get_or_404(professional_id)
+    db.session.delete(professional)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+
+
+@app.route('/user/admin_search', methods=['GET', 'POST'])  # Allow both GET and POST methods
 def admin_search():
-    return render_template('user/admin_search.html')
+    search_results = []
+    search_by = None  # Initialize search_by variable
+
+    if request.method == 'POST':  # Handle POST request
+        search_by = request.form.get('searchBy')
+        search_text = request.form.get('searchText')
+
+        if not search_text:
+            flash('Please enter search text.', 'warning')
+            return redirect(url_for('admin_search'))
+
+        # Handling different search criteria and querying the appropriate table
+        if search_by == 'services':
+            # Search in the 'services' table for service_name
+            search_results = Services.query.filter(Services.service_name.ilike(f"%{search_text}%")).all()
+        elif search_by == 'service requests':
+            # Search in the 'service_req' table for service_name
+            search_results = Service_Req.query.filter(Service_Req.service_name.ilike(f"%{search_text}%")).all()
+        elif search_by == 'customers':
+            # Search in the 'customers' table for full_name
+            search_results = Customer.query.filter(Customer.full_name.ilike(f"%{search_text}%")).all()
+        elif search_by == 'professionals':
+            # Search in the 'professionals' table for full_name
+            search_results = Professional.query.filter(Professional.full_name.ilike(f"%{search_text}%")).all()
+        else:
+            flash('Invalid search criteria.', 'danger')
+
+    return render_template('user/admin_search.html', search_results=search_results, search_by=search_by)
+
+
+# Route to display and handle the form
+@app.route('/user/admin_add_service', methods=['GET', 'POST'])
+def add_service():
+    if request.method == 'POST':
+        # Retrieve form data
+        service_id = request.form['service_id']
+        service_name = request.form['service_name']
+        base_price = request.form['base_price']
+
+        # Create and save the new service
+        new_service = Services(id=service_id,service_name=service_name, base_price=base_price)
+        db.session.add(new_service)
+        db.session.commit()
+
+        flash('New service added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard
+
+    return render_template('user/admin_add_service.html')
+
 
 @app.route('/user/admin_summary', methods=['GET'])
 def admin_summary():
-    return render_template('user/admin_summary.html')
+    # Query for ratings data
+    ratings_query = text("SELECT rating, COUNT(*) FROM closed__services GROUP BY rating")
+    ratings_result = db.session.execute(ratings_query).fetchall()
+
+    # Process ratings result into a format for Chart.js
+    ratings_data = {str(row[0]): row[1] for row in ratings_result}
+
+    # Query for service requests data
+    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
+    requests_result = db.session.execute(requests_query).fetchall()
+
+    # Process service requests result
+    service_requests_data = {
+        'Received': sum(row[1] for row in requests_result),
+        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
+        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+    }
+
+    return render_template('user/admin_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
+
 
 from flask import session
 
