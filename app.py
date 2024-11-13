@@ -8,7 +8,7 @@ from flask_migrate import Migrate
 import sqlite3
 from sqlalchemy.sql import text
 from datetime import datetime
-
+from sqlalchemy import func
 
 
 
@@ -70,7 +70,8 @@ def user_login():
 def customer_dashboard():
     customer_id = session['customer_id']
     service_history = Service_History.query.filter_by(id=customer_id).all()
-    return render_template('user/customer_dashboard.html', service_history=service_history)
+    services = Services.query.all()
+    return render_template('user/customer_dashboard.html', services=services,service_history=service_history)
 
 @app.route('/user/customer_profile', methods=['GET'])
 def customer_profile():
@@ -242,26 +243,24 @@ def close_service():
 
 @app.route('/user/customer_summary', methods=['GET'])
 def customer_summary():
+    customer_id = session['customer_id']
+    # Query for the total number of records (Requested)
+    total_requested = db.session.query(func.count(Service_History.id)).filter(Service_History.id == customer_id).scalar()
 
-    # Query for ratings data
-    ratings_query = text("SELECT rating, COUNT(*) FROM closed__services GROUP BY rating")
-    ratings_result = db.session.execute(ratings_query).fetchall()
+    # Query for the number of Closed records
+    total_closed = db.session.query(func.count(Service_History.id)).filter(Service_History.id == customer_id, Service_History.status == 'Closed').scalar()
 
-    # Process ratings result into a format for Chart.js
-    ratings_data = {str(row[0]): row[1] for row in ratings_result}
+    # Calculate the number of Assigned records (Requested - Closed)
+    total_assigned = total_requested - total_closed
 
-    # Query for service requests data
-    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
-    requests_result = db.session.execute(requests_query).fetchall()
-
-    # Process service requests result
-    service_requests_data = {
-        'Received': sum(row[1] for row in requests_result),
-        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
-        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+    # Prepare the data for the chart
+    service_history_data = {
+        'Requested': total_requested,
+        'Closed': total_closed,
+        'Assigned': total_assigned
     }
 
-    return render_template('user/customer_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
+    return render_template('user/customer_summary.html', service_history_data=service_history_data)
     
 
 @app.route('/professional/login', methods=['GET'])
@@ -628,8 +627,11 @@ def search_services():
         # Search in the 'services' table for service_name
         search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%"),Professional.status == "Approved").all()
 
+    customer_id = session['customer_id']
+    service_history = Service_History.query.filter_by(id=customer_id).all()
+    services = Services.query.all()
 
-    return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
+    return render_template('user/customer_dashboard.html', services=services,service_history=service_history,search_results=search_results, search_by=search_by)
     
     
 
