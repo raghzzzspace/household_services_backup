@@ -8,17 +8,14 @@ from flask_migrate import Migrate
 import sqlite3
 from sqlalchemy.sql import text
 
-from sqlalchemy import create_engine
 
-# Add the 'timeout' argument to the SQLite connection string
-engine = create_engine('sqlite:///your_database.db', connect_args={'timeout': 30})
 
 
 app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -344,7 +341,7 @@ def accept_service(service_id):
         # Add the service to Services_status with status 'A'
         new_service = Services_status(
             customer_name=service.customer_name,
-            contact_no=service.contact_no,
+            email=service.email,
             location=service.location,
             status='A'
         )
@@ -361,7 +358,7 @@ def reject_service(service_id):
         # Add the service to Services_status with status 'R'
         new_service = Services_status(
             customer_name=service.customer_name,
-            contact_no=service.contact_no,
+            email=service.email,
             location=service.location,
             status='R'
         )
@@ -583,8 +580,7 @@ def search_services():
 
     return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
     
-    pass
-
+    
 
 
 

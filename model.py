@@ -55,6 +55,8 @@ class Today_services:
     customer_name=db.Column(db.String(256),nullable=False)
     email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.Integer,nullable=True)
+    professional_id=db.Column(db.Integer,nullable=False)
+    customer_id=db.Column(db.Integer,nullable=False)
 
 #Define the closed_services model
 class Closed_services:
@@ -64,6 +66,8 @@ class Closed_services:
     location=db.Column(db.Integer,nullable=False)
     date=db.Column(db.Date,nullable=False)
     rating=db.Column(db.Integer)
+    professional_id=db.Column(db.Integer,nullable=False)
+    customer_id=db.Column(db.Integer,nullable=False)
 
 # Define the Service_History model
 class Service_History(db.Model):

@@ -17,7 +17,7 @@
                         <form action="/user/professional_edit_profile/{{ professional.professional_id }}" method="POST">
                             <button class="btn btn-outline-primary">Edit Profile</button>
                         </form>                                             
-                        </div>   
+                        </div>  
                     </div>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                         <tr>
                             <td>{{ service.id }}</td>
                             <td>{{ service.customer_name }}</td>
-                            <td>{{ service.contact_no }}</td>
+                            <td>{{ service.email }}</td>
                             <td>{{ service.location }}</td>
                             <td>
                                 <form action="{{ url_for('accept_service', service_id=service.id) }}" method="post" style="display:inline;">
