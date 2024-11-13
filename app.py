@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req
+from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req, Service_History
 import secrets
 from flask_migrate import Migrate
 import sqlite3
@@ -18,7 +18,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -28,8 +28,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -46,7 +46,7 @@ def user_login():
         if customer:
             session['customer_id'] = customer.customer_id
             flash(f'Welcome back, {customer.full_name}!', 'success')
-            return redirect(url_for('cust_dashboard'))  # Redirect to Customer Dashboard
+            return redirect(url_for('customer_dashboard'))  # Redirect to Customer Dashboard
 
         # Check if the user is a Professional
         professional = Professional.query.filter_by(email=email, password=password).first()
@@ -69,17 +69,20 @@ def user_login():
 
 
 @app.route('/user/customer_dashboard', methods=['GET'])
-def cust_dashboard():
-    return render_template('user/customer_dashboard.html')
+def customer_dashboard():
+    customer_id = session['customer_id']
+    service_history = Service_History.query.filter_by(id=customer_id).all()
+    return render_template('user/customer_dashboard.html', service_history=service_history)
 
 @app.route('/user/customer_profile', methods=['GET'])
-def cust_profile():
+def customer_profile():
     customer_id = session['customer_id']  # Retrieve customer_id from session
     customer = Customer.query.filter_by(customer_id=customer_id).one()
     return render_template('user/customer_profile.html', customer=customer)
 
 @app.route('/user/customer_remarks', methods=['GET'])
-def cust_remarks():
+def customer_remarks():
+
     return render_template('user/customer_remarks.html')
 
 @app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
@@ -140,12 +143,81 @@ def professional_edit_profile(professional_id):
     return render_template('user/professional_edit_profile.html', professional=professional)
 
 
-@app.route('/user/customer_search', methods=['GET'])
-def cust_search():
-    return render_template('user/customer_search.html')
+@app.route('/user/customer_search', methods=['GET', 'POST'])
+def customer_search():
+    search_results = []
+    search_by = None  # Initialize search_by variable
+
+    if request.method == 'POST':  # Handle POST request
+        search_by = request.form.get('searchBy')
+        search_text = request.form.get('searchInput')
+
+        if not search_text:
+            flash('Please enter search text.', 'warning')
+            return redirect(url_for('customer_search'))
+
+        # Handling different search criteria and querying the appropriate table
+        if search_by == 'service_name':
+            # Search in the 'services' table for service_name
+            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%")).all()
+        elif search_by == 'pin_code':
+            # Search in the 'professional' table for pincode
+            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%")).all()
+        elif search_by == 'location':
+            # Search in the 'professional' table for location
+            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%")).all()
+        else:
+            flash('Invalid search criteria.', 'danger')
+
+    return render_template('user/customer_search.html', search_results=search_results, search_by=search_by)
+
+@app.route('/book_service', methods=['POST'])
+def book_service():
+    # Retrieve form data
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    customer = Customer.query.filter_by(customer_id=customer_id).one()
+
+    # Create a new booking instance
+    new_booking = Today_Services(
+        customer_name=customer.full_name,
+        email=customer.email,
+        location=customer.address
+    )
+    
+    new_booking_cust = Service_History(
+        id= customer.customer_id,
+        service_name = request.form.get('service_name'),
+        professional_name=request.form.get('professional_name'),
+        email=request.form.get('email'),
+        status = "Requested"
+    )
+
+    # Add to the session and commit to the database
+    db.session.add(new_booking)
+    db.session.add(new_booking_cust)
+    db.session.commit()
+
+    flash('Booking successful!', 'success')
+
+    # Redirect back to the main page or to a confirmation page
+    return redirect(url_for('customer_dashboard'))
+
+@app.route('/close_service', methods=['POST'])
+def close_service():
+    # Retrieve form data
+    service_id = request.form.get('service_id')
+    service = Service_History.query.filter_by(service_id = service_id).one()
+    if service:
+        service.status = "Closed"
+        db.session.commit()
+
+    flash('Booking successful!', 'success')
+
+    # Redirect back to the main page or to a confirmation page
+    return render_template('user/customer_remarks.html', service = service)
 
 @app.route('/user/customer_summary', methods=['GET'])
-def cust_summary():
+def customer_summary():
     return render_template('user/customer_summary.html')
 
 @app.route('/professional/login', methods=['GET'])
@@ -495,6 +567,30 @@ def logout():
 @app.route('/user/admin_profile', methods=['GET'])
 def admin_profile():
     return render_template('/user/admin_profile.html')
+
+@app.route('/search_services', methods=['POST'])
+def search_services():
+    
+    
+    search_results = []
+    search_by = None  # Initialize search_by variable
+
+    if request.method == 'POST':  # Handle POST request
+        search_by = request.form.get('service_type')
+        # Search in the 'services' table for service_name
+        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%")).all()
+
+
+    return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
+    
+    pass
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=7000)
