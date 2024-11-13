@@ -18,7 +18,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -28,8 +28,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -46,7 +46,7 @@ def user_login():
         if customer:
             session['customer_id'] = customer.customer_id
             flash(f'Welcome back, {customer.full_name}!', 'success')
-            return redirect(url_for('cust_dashboard'))  # Redirect to Customer Dashboard
+            return redirect(url_for('customer_dashboard'))  # Redirect to Customer Dashboard
 
         # Check if the user is a Professional
         professional = Professional.query.filter_by(email=email, password=password).first()
@@ -69,17 +69,17 @@ def user_login():
 
 
 @app.route('/user/customer_dashboard', methods=['GET'])
-def cust_dashboard():
+def customer_dashboard():
     return render_template('user/customer_dashboard.html')
 
 @app.route('/user/customer_profile', methods=['GET'])
-def cust_profile():
+def customer_profile():
     customer_id = session['customer_id']  # Retrieve customer_id from session
     customer = Customer.query.filter_by(customer_id=customer_id).one()
     return render_template('user/customer_profile.html', customer=customer)
 
 @app.route('/user/customer_remarks', methods=['GET'])
-def cust_remarks():
+def customer_remarks():
     return render_template('user/customer_remarks.html')
 
 @app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
@@ -140,12 +140,36 @@ def professional_edit_profile(professional_id):
     return render_template('user/professional_edit_profile.html', professional=professional)
 
 
-@app.route('/user/customer_search', methods=['GET'])
-def cust_search():
-    return render_template('user/customer_search.html')
+@app.route('/user/customer_search', methods=['GET', 'POST'])
+def customer_search():
+    search_results = []
+    search_by = None  # Initialize search_by variable
+
+    if request.method == 'POST':  # Handle POST request
+        search_by = request.form.get('searchBy')
+        search_text = request.form.get('searchInput')
+
+        if not search_text:
+            flash('Please enter search text.', 'warning')
+            return redirect(url_for('customer_search'))
+
+        # Handling different search criteria and querying the appropriate table
+        if search_by == 'service_name':
+            # Search in the 'services' table for service_name
+            search_results = Services.query.filter(Services.service_name.ilike(f"%{search_text}%")).all()
+        elif search_by == 'pin_code':
+            # Search in the 'professional' table for pincode
+            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%")).all()
+        elif search_by == 'location':
+            # Search in the 'professional' table for location
+            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%")).all()
+        else:
+            flash('Invalid search criteria.', 'danger')
+
+    return render_template('user/customer_search.html', search_results=search_results, search_by=search_by)
 
 @app.route('/user/customer_summary', methods=['GET'])
-def cust_summary():
+def customer_summary():
     return render_template('user/customer_summary.html')
 
 @app.route('/professional/login', methods=['GET'])
