@@ -543,5 +543,29 @@ def logout():
 def admin_profile():
     return render_template('/user/admin_profile.html')
 
+@app.route('/search_services', methods=['POST'])
+def search_services():
+    
+    
+    search_results = []
+    search_by = None  # Initialize search_by variable
+
+    if request.method == 'POST':  # Handle POST request
+        search_by = request.form.get('service_type')
+        # Search in the 'services' table for service_name
+        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%")).all()
+
+
+    return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
+    
+    pass
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=7000)

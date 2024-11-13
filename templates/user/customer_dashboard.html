@@ -6,45 +6,77 @@
     <!-- Service Options Section -->
     <h3 class="text-center mb-4" style="color: #004aad;">Looking For</h3>
     <div class="row text-center mb-5">
-        <div class="col-md-3">
-            <button onclick="showPackages('AC Repair', acRepairPackages)" class="btn btn-light">
-                <img src="{{ url_for('static', filename='ac_repair.jpg') }}" alt="AC Repair" class="img-fluid"
-                    width="150" height="200" />
-                <p>AC Repair</p>
-            </button>
-        </div>
-        <div class="col-md-3">
-            <button onclick="showPackages('Salon', salonPackages)" class="btn btn-light">
-                <img src="{{ url_for('static', filename='saloon.jpg') }}" alt="Saloon" class="img-fluid" width="150"
-                    height="200" />
-                <p>Saloon</p>
-            </button>
-        </div>
-        <div class="col-md-3">
-            <button onclick="showPackages('Cleaning', cleaningPackages)" class="btn btn-light">
-                <img src="{{ url_for('static', filename='cleaning.jpeg') }}" alt="Cleaning" class="img-fluid"
-                    width="150" height="200" />
-                <p>Cleaning</p>
-            </button>
-        </div>
-        <div class="col-md-3">
-            <button onclick="showPackages('Electrician', electricianPackages)" class="btn btn-light">
-                <img src="{{ url_for('static', filename='electrician.jpeg') }}" alt="Electrician" class="img-fluid"
-                    width="150" height="200" />
-                <p>Electrician</p>
-            </button>
-        </div>
+        <form method="POST" action="{{ url_for('search_services') }}" class="row">
+            <div class="col-md-3">
+                <button type="submit" name="service_type" value="AC Repair" class="btn btn-light">
+                    <img src="{{ url_for('static', filename='ac_repair.jpg') }}" alt="AC Repair" class="img-fluid"
+                        width="150" height="200" />
+                    <p>AC Repair</p>
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" name="service_type" value="Salon" class="btn btn-light">
+                    <img src="{{ url_for('static', filename='saloon.jpg') }}" alt="Salon" class="img-fluid" width="150"
+                        height="200" />
+                    <p>Salon</p>
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" name="service_type" value="Cleaning" class="btn btn-light">
+                    <img src="{{ url_for('static', filename='cleaning.jpeg') }}" alt="Cleaning" class="img-fluid"
+                        width="150" height="200" />
+                    <p>Cleaning</p>
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" name="service_type" value="Electrician" class="btn btn-light">
+                    <img src="{{ url_for('static', filename='electrician.jpeg') }}" alt="Electrician" class="img-fluid"
+                        width="150" height="200" />
+                    <p>Electrician</p>
+                </button>
+            </div>
+        </form>
     </div>
 
-    <!-- Package Results Section -->
-    <div id="packageResults" class="mb-5" style="display: none;">
-        <h3 id="packageHeading" class="text-center mb-4" style="color: #004aad;"></h3>
-        <div class="list-group" id="packageList">
-            <!-- Package results will be dynamically inserted here -->
-        </div>
+    <!-- Search Results Section -->
+    {% if search_results %}
+    <div class="mb-5">
+        <h3 class="text-center mb-4" style="color: #004aad;">{{ selected_service }} Professionals</h3>
+        <table class="table table-striped table-hover shadow rounded">
+            <thead style="background-color: #d9eaf7; color: #084298;">
+                <tr>
+                    <th>Professional Name</th>
+                    <th>Service Name</th>
+                    <th>Experience</th>
+                    <th>Address</th>
+                    <th>Pincode</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in search_results %}
+                <tr>
+                    <td>{{ result.full_name }}</td>
+                    <td>{{ result.service_name }}</td>
+                    <td>{{ result.experience }}</td>
+                    <td>{{ result.address }}</td>
+                    <td>{{ result.pincode }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('book_service') }}">
+                            <input type="hidden" name="professional_id" value="{{ result.id }}">
+                            <button type="submit" class="btn btn-success">Book</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% else %}
+    <p class="text-center">Select a service to view available professionals.</p>
+    {% endif %}
 
-    <!-- Service History Section -->
+    <!-- Service History Section (Static Data) -->
     <h3 class="text-center mb-4" style="color: #004aad;">Service History</h3>
     <table class="table table-striped table-hover shadow rounded">
         <thead style="background-color: #d9eaf7; color: #084298;">
@@ -66,7 +98,7 @@
             </tr>
             <tr>
                 <td>2</td>
-                <td>Saloon</td>
+                <td>Salon</td>
                 <td>Jane Smith</td>
                 <td>(234) 567-8901</td>
                 <td>Closed</td>
@@ -88,54 +120,4 @@
         </tbody>
     </table>
 </div>
-
-<script>
-    // Sample packages data
-    const acRepairPackages = [
-        { name: "Basic AC Repair", rating: "4.2", price: "$40", description: "Basic inspection and repair." },
-        { name: "Comprehensive AC Repair", rating: "4.8", price: "$80", description: "In-depth repair and cleaning." }
-    ];
-
-    const salonPackages = [
-        { name: "Basic Salon Package", rating: "4.5", price: "$50", description: "Haircut and styling." },
-        { name: "Deluxe Salon Package", rating: "4.7", price: "$80", description: "Haircut, facial, and manicure." }
-    ];
-
-    const cleaningPackages = [
-        { name: "Basic Cleaning", rating: "4.3", price: "$30", description: "Standard cleaning for small areas." },
-        { name: "Deep Cleaning", rating: "4.8", price: "$70", description: "Intensive cleaning for entire home." }
-    ];
-
-    const electricianPackages = [
-        { name: "Basic Electrician Service", rating: "4.1", price: "$25", description: "Minor electrical repairs." },
-        { name: "Full Electrical Checkup", rating: "4.9", price: "$100", description: "Comprehensive wiring check and repair." }
-    ];
-
-    // Function to dynamically display packages based on selected service
-    function showPackages(serviceType, packages) {
-        // Update heading
-        document.getElementById('packageResults').style.display = 'block';
-        document.getElementById('packageHeading').innerText = `Best ${serviceType} Packages`;
-
-        // Clear previous packages
-        const packageList = document.getElementById('packageList');
-        packageList.innerHTML = '';
-
-        // Add packages dynamically
-        packages.forEach(pkg => {
-            const packageItem = document.createElement('div');
-            packageItem.className = 'list-group-item d-flex justify-content-between align-items-center shadow-sm p-3 mb-3 rounded';
-            packageItem.innerHTML = `
-                    <div>
-                        <h5>${pkg.name}</h5>
-                        <p>Ratings: ${pkg.rating}/5 &nbsp; | &nbsp; Base Price: ${pkg.price}</p>
-                        <p>Description: ${pkg.description}</p>
-                    </div>
-                    <button type="button" class="btn btn-success">Book</button>
-                `;
-            packageList.appendChild(packageItem);
-        });
-    }
-</script>
-
 {% endblock %}
