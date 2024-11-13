@@ -15,7 +15,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -179,12 +179,12 @@ def book_service():
         customer_name=customer.full_name,
         email=customer.email,
         location=customer.address,
-        customer_id=customer.customer_id
-        # thik kar lena
+        customer_id=customer.customer_id,
+        professional_id=request.form.get('id')
     )
     
     new_booking_cust = Service_History(
-        id= customer.customer_id,
+        id = customer.customer_id,
         service_name = request.form.get('service_name'),
         professional_name=request.form.get('professional_name'),
         email=request.form.get('email'),
@@ -217,7 +217,27 @@ def close_service():
 
 @app.route('/user/customer_summary', methods=['GET'])
 def customer_summary():
-    return render_template('user/customer_summary.html')
+
+    # Query for ratings data
+    ratings_query = text("SELECT rating, COUNT(*) FROM closed__services GROUP BY rating")
+    ratings_result = db.session.execute(ratings_query).fetchall()
+
+    # Process ratings result into a format for Chart.js
+    ratings_data = {str(row[0]): row[1] for row in ratings_result}
+
+    # Query for service requests data
+    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
+    requests_result = db.session.execute(requests_query).fetchall()
+
+    # Process service requests result
+    service_requests_data = {
+        'Received': sum(row[1] for row in requests_result),
+        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
+        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+    }
+
+    return render_template('user/customer_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
+    
 
 @app.route('/professional/login', methods=['GET'])
 def service_professional_login():

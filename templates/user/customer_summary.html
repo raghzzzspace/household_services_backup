@@ -2,67 +2,63 @@
 
 {% block content %}
 <div class="container-fluid mb-5">
-
-    <!-- Page Heading -->
-    <h3 class="text-center mb-4" style="color: #004aad;">Service Request Summary</h3>
-
-    <!-- Chart Section -->
-    <div class="d-flex justify-content-center">
-        <div style="width: 80%; max-width: 600px;">
-            <canvas id="serviceRequestsChart"></canvas>
+    <div class="row">
+        <!-- Right Column: Service Requests -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body" style="min-height: 250px;"> <!-- Reduced height -->
+                <h5 class="card-title" style="color: #004aad;">Service Requests</h5>
+                <div class="d-flex justify-content-center">
+                    <canvas id="serviceRequestsChart" width="300" height="300"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-
 </div>
 
-<!-- Include Chart.js Library -->
+<!-- Chart.js and Custom Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    // Data for the chart
-    const data = {
-        labels: ['Requested', 'Closed', 'Assigned'], // Categories for the bar chart
-        datasets: [{
-            label: 'Service Requests',
-            data: [30, 20, 15], // Replace with actual counts for each status
-            backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'], // Colors for each bar
-            borderColor: ['#4e73df', '#1cc88a', '#36b9cc'],
-            borderWidth: 1
-        }]
-    };
+    // Pass dynamic data from the backend using template variables
+    var serviceRequestsData = {{ service_requests_data | tojson | safe }};
 
-    // Configuration options
-    const config = {
+    // Bar chart for Service Requests
+    var ctxRequests = document.getElementById('serviceRequestsChart').getContext('2d');
+    var serviceRequestsChart = new Chart(ctxRequests, {
         type: 'bar',
-        data: data,
+        data: {
+            labels: ['Received', 'Closed', 'Rejected'],
+            datasets: [{
+                label: 'Service Requests',
+                data: [
+                    serviceRequestsData['Received'] || 0,
+                    serviceRequestsData['Closed'] || 0,
+                    serviceRequestsData['Rejected'] || 0
+                ],
+                backgroundColor: ['#17a2b8', '#28a745', '#dc3545'],
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }]
+        },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    display: false // Hide legend for simplicity
-                }
-            },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Number of Requests'
-                    }
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Status'
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return tooltipItem.label + ': ' + tooltipItem.raw;
+                        }
                     }
                 }
             }
         }
-    };
-
-    // Render the chart
-    const ctx = document.getElementById('serviceRequestsChart').getContext('2d');
-    new Chart(ctx, config);
+    });
 </script>
-
 {% endblock %}
