@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Today_Services, Closed_Services, Services_status, Admin_Search,Services,Service_Req, Service_History
+from model import Closed_Services, Services_status, Admin_Search,Services,Service_Req, Service_History, Today_Services
 import secrets
 from flask_migrate import Migrate
 import sqlite3
@@ -25,8 +25,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 @app.route("/")
 def index():
@@ -178,7 +178,9 @@ def book_service():
     new_booking = Today_Services(
         customer_name=customer.full_name,
         email=customer.email,
-        location=customer.address
+        location=customer.address,
+        customer_id=customer.customer_id
+        # thik kar lena
     )
     
     new_booking_cust = Service_History(
@@ -326,13 +328,17 @@ def get_logged_in_professional():
 @app.route('/user/professional_dashboard', methods=['GET'])
 def professional_dashboard():
     professional = get_logged_in_professional()
-    # Query the database for today and closed services
-    today_services = Today_Services.query.all()  # Get all records from Today_Services
-    closed_services = Closed_Services.query.all()  # Get all records from Closed_Services
+    professional_id = session.get('professional_id')  # Assuming the professional's ID is stored in session
+
+    # Query the database for today and closed services, filtering by professional_id
+    today_services = Today_Services.query.filter_by(professional_id=professional_id).all()
+    closed_services = Closed_Services.query.filter_by(pid=professional_id).all()
 
     # Render the template with dynamic data
-    return render_template('user/professional_dashboard.html',professional=professional, today_services=today_services, closed_services=closed_services)
-
+    return render_template('user/professional_dashboard.html', 
+                           professional=professional, 
+                           today_services=today_services, 
+                           closed_services=closed_services)
 @app.route('/accept_service/<int:service_id>', methods=['POST'])
 def accept_service(service_id):
     # Get the service from Today_Services

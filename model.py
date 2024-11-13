@@ -49,25 +49,7 @@ class Service_Req(db.Model):
     assign_prof=db.Column(db.Integer)
     req_date=db.Column(db.Date,nullable=False)
 
-# Define the Today_services model
-class Today_services:
-    id=db.Column(db.Integer, primary_key=True)
-    customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False)
-    location=db.Column(db.Integer,nullable=True)
-    professional_id=db.Column(db.Integer,nullable=False)
-    customer_id=db.Column(db.Integer,nullable=False)
 
-#Define the closed_services model
-class Closed_services:
-    id=db.Column(db.Integer, primary_key=True)
-    customer_name=db.Column(db.String(256),nullable=False)
-    email = db.Column(db.String(255), nullable=False)
-    location=db.Column(db.Integer,nullable=False)
-    date=db.Column(db.Date,nullable=False)
-    rating=db.Column(db.Integer)
-    professional_id=db.Column(db.Integer,nullable=False)
-    customer_id=db.Column(db.Integer,nullable=False)
 
 # Define the Service_History model
 class Service_History(db.Model):
@@ -82,15 +64,20 @@ class Today_Services(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
     email = db.Column(db.String(255), nullable=False)
-    location=db.Column(db.String,nullable=True)
+    location=db.Column(db.Integer,nullable=True)
+    professional_id=db.Column(db.Integer,nullable=False)
+    customer_id=db.Column(db.Integer,nullable=False)
 
 class Closed_Services(db.Model):
     id=db.Column(db.Integer, primary_key=True)
     customer_name=db.Column(db.String(256),nullable=False)
     email = db.Column(db.String(255), nullable=False)
-    location=db.Column(db.String,nullable=False)
+    location=db.Column(db.Integer,nullable=False)
     date=db.Column(db.Date,nullable=False)
     rating=db.Column(db.Integer)
+    pid=db.Column(db.Integer,nullable=False)
+    cid=db.Column(db.Integer,nullable=False)
+
 
 class Services_status(db.Model):
     id=db.Column(db.Integer, primary_key=True)
