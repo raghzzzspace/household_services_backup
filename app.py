@@ -7,7 +7,8 @@ import secrets
 from flask_migrate import Migrate
 import sqlite3
 from sqlalchemy.sql import text
-
+from datetime import datetime
+from sqlalchemy import func
 
 
 
@@ -15,7 +16,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -25,8 +26,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -69,7 +70,8 @@ def user_login():
 def customer_dashboard():
     customer_id = session['customer_id']
     service_history = Service_History.query.filter_by(id=customer_id).all()
-    return render_template('user/customer_dashboard.html', service_history=service_history)
+    services = Services.query.all()
+    return render_template('user/customer_dashboard.html', services=services,service_history=service_history)
 
 @app.route('/user/customer_profile', methods=['GET'])
 def customer_profile():
@@ -79,8 +81,28 @@ def customer_profile():
 
 @app.route('/user/customer_remarks', methods=['GET'])
 def customer_remarks():
-
     return render_template('user/customer_remarks.html')
+
+@app.route('/user/submit_service_remarks', methods=['POST'])
+def submit_service_remarks():
+    customer_id = session['customer_id']  # Retrieve customer_id from session
+    customer = Customer.query.filter_by(customer_id=customer_id).one()
+    service_id = request.form.get('service_id')
+    professional = Professional.query.join(Service_History, Professional.full_name == Service_History.professional_name).filter(Service_History.service_id == service_id).filter(Professional.full_name == Service_History.professional_name).one()
+    date_string = datetime.today().strftime('%Y-%m-%d')
+    # Create a new booking instance
+    closed_booking = Closed_Services(
+        customer_name=customer.full_name,
+        email=customer.email,
+        location=customer.address,
+        date=datetime.strptime(date_string, "%Y-%m-%d").date(),
+        cid=customer.customer_id,
+        pid=professional.professional_id,
+        rating = request.form.get('rating')
+    )
+    db.session.add(closed_booking)
+    db.session.commit()
+    return redirect(url_for('customer_dashboard'))
 
 @app.route('/user/professional_view_profile/<int:professional_id>', methods=['GET'])
 def professional_view_profile(professional_id):
@@ -156,13 +178,13 @@ def customer_search():
         # Handling different search criteria and querying the appropriate table
         if search_by == 'service_name':
             # Search in the 'services' table for service_name
-            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         elif search_by == 'pin_code':
             # Search in the 'professional' table for pincode
-            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.pincode.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         elif search_by == 'location':
             # Search in the 'professional' table for location
-            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%")).all()
+            search_results = Professional.query.filter(Professional.address.ilike(f"%{search_text}%"),Professional.status == "Approved").all()
         else:
             flash('Invalid search criteria.', 'danger')
 
@@ -179,12 +201,12 @@ def book_service():
         customer_name=customer.full_name,
         email=customer.email,
         location=customer.address,
-        customer_id=customer.customer_id
-        # thik kar lena
+        customer_id=customer.customer_id,
+        professional_id=request.form.get('id')
     )
     
     new_booking_cust = Service_History(
-        id= customer.customer_id,
+        id = customer.customer_id,
         service_name = request.form.get('service_name'),
         professional_name=request.form.get('professional_name'),
         email=request.form.get('email'),
@@ -210,14 +232,36 @@ def close_service():
         service.status = "Closed"
         db.session.commit()
 
-    flash('Booking successful!', 'success')
+    professional = Professional.query.join(Service_History, Professional.full_name == Service_History.professional_name).filter(Service_History.service_id == service_id).filter(Professional.full_name == Service_History.professional_name).one()
+    customer_id = session['customer_id']
+    
+    db.session.query(Today_Services).filter_by(professional_id = professional.professional_id, customer_id = customer_id ).delete()
+    db.session.commit()
 
     # Redirect back to the main page or to a confirmation page
     return render_template('user/customer_remarks.html', service = service)
 
 @app.route('/user/customer_summary', methods=['GET'])
 def customer_summary():
-    return render_template('user/customer_summary.html')
+    customer_id = session['customer_id']
+    # Query for the total number of records (Requested)
+    total_requested = db.session.query(func.count(Service_History.id)).filter(Service_History.id == customer_id).scalar()
+
+    # Query for the number of Closed records
+    total_closed = db.session.query(func.count(Service_History.id)).filter(Service_History.id == customer_id, Service_History.status == 'Closed').scalar()
+
+    # Calculate the number of Assigned records (Requested - Closed)
+    total_assigned = total_requested - total_closed
+
+    # Prepare the data for the chart
+    service_history_data = {
+        'Requested': total_requested,
+        'Closed': total_closed,
+        'Assigned': total_assigned
+    }
+
+    return render_template('user/customer_summary.html', service_history_data=service_history_data)
+    
 
 @app.route('/professional/login', methods=['GET'])
 def service_professional_login():
@@ -581,10 +625,13 @@ def search_services():
     if request.method == 'POST':  # Handle POST request
         search_by = request.form.get('service_type')
         # Search in the 'services' table for service_name
-        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%")).all()
+        search_results = Professional.query.filter(Professional.service_name.ilike(f"%{search_by}%"),Professional.status == "Approved").all()
 
+    customer_id = session['customer_id']
+    service_history = Service_History.query.filter_by(id=customer_id).all()
+    services = Services.query.all()
 
-    return render_template('user/customer_dashboard.html', search_results=search_results, search_by=search_by)
+    return render_template('user/customer_dashboard.html', services=services,service_history=service_history,search_results=search_results, search_by=search_by)
     
     
 
@@ -595,4 +642,4 @@ def search_services():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=7000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
