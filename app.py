@@ -476,13 +476,13 @@ def professional_search():
 
         # Handling different search criteria
         if search_by == 'date':
-            search_results = Closed_Services.query.filter(Closed_Services.date == search_text).all()
+            search_results = Closed_Services.query.filter(Closed_Services.date == search_text,Closed_Services.pid == session['professional_id']  ).all()
         elif search_by == 'location':
-            search_results = Closed_Services.query.filter(Closed_Services.location.ilike(f"%{search_text}%")).all()
+            search_results = Closed_Services.query.filter(Closed_Services.location.ilike(f"%{search_text}%"),Closed_Services.pid == session['professional_id'] ).all()
         elif search_by == 'pincode':
-            search_results = Closed_Services.query.filter(Closed_Services.location.contains(search_text)).all()
+            search_results = Closed_Services.query.filter(Closed_Services.location.contains(search_text),Closed_Services.pid == session['professional_id'] ).all()
         elif search_by == 'customer':
-            search_results = Closed_Services.query.filter(Closed_Services.customer_name.ilike(f"%{search_text}%")).all()
+            search_results = Closed_Services.query.filter(Closed_Services.customer_name.ilike(f"%{search_text}%"),Closed_Services.pid == session['professional_id'] ).all()
         else:
             flash('Invalid search criteria.', 'danger')
 
@@ -543,8 +543,8 @@ def admin_dashboard():
 
     # Service history
     for history in service_history:
-        # Map status codes to full names (R -> Rejected, A -> Accepted, C -> Closed)
-        status = 'R' if history['status'] == 'Rejected' else 'A' if history['status'] == 'Accepted' else 'C'
+        # Map status codes to full names (R -> Requested, A -> Accepted, C -> Closed)
+        status = 'R' if history['status'] == 'Requested'  else 'C'
         
         service_requests.append({
             'id': history['id'],
