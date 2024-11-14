@@ -16,7 +16,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.secret_key = secrets.token_hex(16)
 
 # Set the database URI (using the correct SQLite URI format)
-app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\Ishita Tayal\Desktop\household_services.db"  # Absolute path for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = r"sqlite:///C:\Users\hp\Desktop\household_services_database.db"  # Absolute path for SQLite
 
 # Disable track modifications (optional)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -26,8 +26,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Create the tables (Only needed on the first run)
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 @app.route("/")
 def index():
@@ -469,13 +469,77 @@ def professional_summary():
     return render_template('user/professional_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
 
 
-# Route to show the dashboard
+from flask import render_template
+from app import db
+from sqlalchemy import text
+
 @app.route('/user/admin_dashboard', methods=['GET'])
 def admin_dashboard():
-    services = Services.query.all()
-    professionals = Professional.query.all()
-    service_requests = Service_Req.query.all()
-    return render_template('user/admin_dashboard.html', services=services, professionals=professionals, service_requests=service_requests)
+    # Query today's services and join with professionals to get their names
+    today_services_query = db.session.execute(
+        text("""
+            SELECT ts.id, ts.professional_id, p.full_name as professional_name
+            FROM today__services ts
+            LEFT JOIN professional p ON ts.professional_id = p.professional_id
+        """)
+    ).mappings()
+
+    # Query closed services and join with professionals to get their names
+    closed_services_query = db.session.execute(
+        text("""
+            SELECT cs.id, cs.pid AS professional_id, cs.date, p.full_name as professional_name
+            FROM closed__services cs
+            LEFT JOIN professional p ON cs.pid = p.professional_id
+        """)
+    ).mappings()
+
+    # Query service history (no join needed, already have professional_name)
+    service_history_query = db.session.execute(
+        text("""
+            SELECT sh.service_id AS id, sh.service_name, sh.professional_name, sh.status
+            FROM service__history sh
+        """)
+    ).mappings()
+
+    # Query all professionals
+    professionals_query = db.session.execute(
+        text("""
+            SELECT professional_id, full_name, experience,service_name FROM professional
+        """)
+    ).mappings()
+    professionals = list(professionals_query)
+
+    # Convert query results directly to lists of dictionaries
+    today_services = list(today_services_query)
+    closed_services = list(closed_services_query)
+    service_history = list(service_history_query)
+
+    # Format data for template
+    service_requests = []
+
+    # Service history
+    for history in service_history:
+        # Map status codes to full names (R -> Rejected, A -> Accepted, C -> Closed)
+        status = 'R' if history['status'] == 'Rejected' else 'A' if history['status'] == 'Accepted' else 'C'
+        
+        service_requests.append({
+            'id': history['id'],
+            'professional': history['professional_name'],
+            'service_name': history['service_name'],  # Placeholder if no date available in history
+            'status': status
+        })
+
+    # Pass data to template
+    return render_template(
+        'user/admin_dashboard.html',
+        services=today_services,
+        professionals=professionals,  # Now you pass the professionals data here
+        service_requests=service_requests
+    )
+
+
+
+
 
 # Route to edit a service
 @app.route('/user/edit_service/<int:service_id>', methods=['GET', 'POST'])
