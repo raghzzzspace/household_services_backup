@@ -85,9 +85,3 @@ class Services_status(db.Model):
     email = db.Column(db.String(255), nullable=False)
     location=db.Column(db.String,nullable=True)
     status=db.Column(db.String(16),nullable=False)
-
-class Admin_Search(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Auto-incremented ID
-    assigned_professional = db.Column(db.String(255), nullable=False)  # Name or ID of the assigned professional
-    requested_date = db.Column(db.Date, nullable=False)  # Requested date
-    status = db.Column(db.String(16), nullable=False)  # Status of the service request

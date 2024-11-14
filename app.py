@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from model import db, Customer, Professional, Admin
-from model import Closed_Services, Services_status, Admin_Search,Services,Service_Req, Service_History, Today_Services
+from model import Closed_Services, Services_status,Services,Service_Req, Service_History, Today_Services
 import secrets
 from flask_migrate import Migrate
 import sqlite3
@@ -368,6 +368,51 @@ def get_logged_in_professional():
         return Professional.query.get(professional_id)  # Fetch the professional object from the database
     return None  # If no professional is logged in, return None
 
+@app.route('/user/professional_summary', methods=['GET'])
+def professional_summary():
+    # Get the logged-in professional
+    logged_in_professional = get_logged_in_professional()
+
+    if not logged_in_professional:
+        # If no professional is logged in, redirect to a login page or show an error
+        return redirect(url_for('user_login'))  # Modify 'user_login' to the name of your login route
+
+    # Query for ratings data for the logged-in professional
+    ratings_query = text("""
+        SELECT rating, COUNT(*) 
+        FROM closed__services 
+        WHERE pid = :professional_id
+        GROUP BY rating
+    """)
+    ratings_result = db.session.execute(ratings_query, {'professional_id': logged_in_professional.professional_id}).fetchall()
+
+    # Process ratings result into a format for Chart.js
+    ratings_data = {str(row[0]): row[1] for row in ratings_result}
+
+    # Query for service requests data for the logged-in professional (now using 'professional_name' instead of 'professional_id')
+    requests_query = text("""
+        SELECT status, COUNT(*) 
+        FROM service__history 
+        WHERE professional_name = :professional_name
+        GROUP BY status
+    """)
+    requests_result = db.session.execute(requests_query, {'professional_name': logged_in_professional.full_name}).fetchall()
+
+    # Process service requests result
+    service_requests_data = {
+        'Received': sum(row[1] for row in requests_result),
+        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
+        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+    }
+
+    # Return the summary data for the logged-in professional
+    return render_template(
+        'user/professional_summary.html',
+        ratings_data=ratings_data,
+        service_requests_data=service_requests_data
+    )
+
+
 
 @app.route('/user/professional_dashboard', methods=['GET'])
 def professional_dashboard():
@@ -446,28 +491,6 @@ def professional_search():
 
 
 
-@app.route('/user/professional_summary', methods=['GET'])
-def professional_summary():
-    # Query for ratings data
-    ratings_query = text("SELECT rating, COUNT(*) FROM closed__services GROUP BY rating")
-    ratings_result = db.session.execute(ratings_query).fetchall()
-
-    # Process ratings result into a format for Chart.js
-    ratings_data = {str(row[0]): row[1] for row in ratings_result}
-
-    # Query for service requests data
-    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
-    requests_result = db.session.execute(requests_query).fetchall()
-
-    # Process service requests result
-    service_requests_data = {
-        'Received': sum(row[1] for row in requests_result),
-        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
-        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
-    }
-
-    return render_template('user/professional_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
-
 
 from flask import render_template
 from app import db
@@ -475,6 +498,7 @@ from sqlalchemy import text
 
 @app.route('/user/admin_dashboard', methods=['GET'])
 def admin_dashboard():
+    services=Services.query.all()
     # Query today's services and join with professionals to get their names
     today_services_query = db.session.execute(
         text("""
@@ -504,7 +528,7 @@ def admin_dashboard():
     # Query all professionals
     professionals_query = db.session.execute(
         text("""
-            SELECT professional_id, full_name, experience,service_name FROM professional
+            SELECT * FROM professional
         """)
     ).mappings()
     professionals = list(professionals_query)
@@ -532,7 +556,7 @@ def admin_dashboard():
     # Pass data to template
     return render_template(
         'user/admin_dashboard.html',
-        services=today_services,
+        services=services,
         professionals=professionals,  # Now you pass the professionals data here
         service_requests=service_requests
     )
