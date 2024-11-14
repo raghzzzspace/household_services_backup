@@ -674,14 +674,18 @@ def admin_summary():
     ratings_data = {str(row[0]): row[1] for row in ratings_result}
 
     # Query for service requests data
-    requests_query = text("SELECT status, COUNT(*) FROM services_status GROUP BY status")
+    requests_query = text("SELECT COUNT(*) FROM service__history")
+    requests_query2 = text("SELECT COUNT(*) FROM closed__services")
+    requests_query3 = text("SELECT status,COUNT(*) FROM services_status group by status")
+    requests_result2 = db.session.execute(requests_query2).fetchall()
     requests_result = db.session.execute(requests_query).fetchall()
+    requests_result3 = db.session.execute(requests_query3).fetchall()
 
-    # Process service requests result
+    # Process service requests result   
     service_requests_data = {
-        'Received': sum(row[1] for row in requests_result),
-        'Closed': sum(row[1] for row in requests_result if row[0] == 'C'),
-        'Rejected': sum(row[1] for row in requests_result if row[0] == 'R')
+        'Received': (requests_result[0][0]),
+        'Closed': sum(row[0] for row in requests_result2),
+        'Rejected': sum(row[1] for row in requests_result3 if row[0] == 'R')
     }
 
     return render_template('user/admin_summary.html', ratings_data=ratings_data, service_requests_data=service_requests_data)
